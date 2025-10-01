@@ -1,0 +1,23 @@
+# Yield Prediction Agent Configuration
+
+agent:
+  name: "yield_agent"
+  description: "Specialized agent for crop yield prediction and agricultural planning"
+  model: "gemini-2.0-flash-exp"
+  
+  # Agent capabilities
+  capabilities:
+    - "yield_prediction"
+    - "crop_planning"
+    - "harvest_forecasting"
+  
+  # Tool configuration
+  tools:
+    - "predict_yield"
+    - "analyze_soil_conditions"
+  
+  # Behavior settings
+  behavior:
+    max_iterations: 10
+    allow_parallel_tool_calls: false
+    response_format: "detailed_agricultural"

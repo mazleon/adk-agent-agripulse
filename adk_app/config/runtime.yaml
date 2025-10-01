@@ -1,0 +1,26 @@
+# ADK Runtime Configuration
+# Controls development UI, ports, and runtime behavior
+
+runtime:
+  # Development UI settings
+  dev_ui:
+    enabled: true
+    port: 8080
+    host: "0.0.0.0"
+    auto_open_browser: true
+  
+  # Logging configuration
+  logging:
+    level: "INFO"
+    format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+    file: "logs/agripulse.log"
+  
+  # Session management
+  session:
+    service: "in_memory"  # Options: in_memory, redis
+    ttl_seconds: 3600
+  
+  # Performance settings
+  performance:
+    max_concurrent_requests: 10
+    timeout_seconds: 60

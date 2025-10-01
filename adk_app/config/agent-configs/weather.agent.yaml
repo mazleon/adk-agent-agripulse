@@ -1,0 +1,22 @@
+# Weather Agent Configuration
+
+agent:
+  name: "weather_agent"
+  description: "Specialized agent for weather information and forecasts"
+  model: "gemini-2.0-flash-exp"
+  
+  # Agent capabilities
+  capabilities:
+    - "current_weather"
+    - "weather_forecast"
+    - "agricultural_weather_insights"
+  
+  # Tool configuration
+  tools:
+    - "get_weather_report"
+  
+  # Behavior settings
+  behavior:
+    max_iterations: 5
+    allow_parallel_tool_calls: true
+    response_format: "professional_agricultural"

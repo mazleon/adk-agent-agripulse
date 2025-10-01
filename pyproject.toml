@@ -1,0 +1,28 @@
+[project]
+name = "agripulse-adk-agent"
+version = "0.1.0"
+description = "AI-powered agricultural assistant with weather and yield prediction"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "google-adk>=1.15.1",
+    "requests>=2.31.0",
+    "python-dotenv>=1.0.0",
+    "pyyaml>=6.0.0",
+    "pytest>=8.4.2",
+    "snowflake>=1.8.0",
+    "streamlit>=1.39.0",
+    "streamlit-chat>=0.1.1",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.4.0",
+    "pytest-asyncio>=0.21.0",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=8.4.2",
+    "pytest-asyncio>=1.2.0",
+]

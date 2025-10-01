@@ -1,0 +1,38 @@
+# Model Configuration
+# Defines which models to use and authentication mode
+
+models:
+  # Default model for all agents
+  default:
+    model_id: "gemini-2.0-flash-exp"
+    auth_mode: "gemini"  # Options: gemini, vertex
+    
+  # Model-specific configurations
+  weather_agent:
+    model_id: "gemini-2.0-flash-exp"
+    temperature: 0.7
+    top_p: 0.95
+    max_output_tokens: 2048
+    
+  yield_agent:
+    model_id: "gemini-2.0-flash-exp"
+    temperature: 0.5
+    top_p: 0.9
+    max_output_tokens: 4096
+    
+  coordinator:
+    model_id: "gemini-2.0-flash-exp"
+    temperature: 0.3
+    top_p: 0.95
+    max_output_tokens: 2048
+
+# Authentication settings
+auth:
+  # For Gemini API (using API key)
+  gemini:
+    api_key_env: "GOOGLE_API_KEY"
+    
+  # For Vertex AI (using project/location)
+  vertex:
+    project_id_env: "GOOGLE_CLOUD_PROJECT"
+    location: "us-central1"
