@@ -201,16 +201,30 @@ def initialize_session_state():
     
     if "pending_query" not in st.session_state:
         st.session_state.pending_query = None
-    
-    if "session_created" not in st.session_state:
-        st.session_state.session_created = False
 
 
-def get_agent_runner():
-    """Get or create agent runner"""
+async def get_agent_runner():
+    """Get or create agent runner with session"""
     if st.session_state.agent_runner is None:
-        st.session_state.agent_runner = InMemoryRunner(agent=coordinator_agent)
-        st.session_state.session_created = True
+        # Create runner with app_name
+        st.session_state.agent_runner = InMemoryRunner(
+            agent=coordinator_agent,
+            app_name="agripulse_ai"
+        )
+        
+        # Create session immediately after runner creation
+        user_id = st.session_state.user_id
+        session_id = st.session_state.session_id
+        
+        try:
+            await st.session_state.agent_runner.session_service.create_session(
+                app_name="agripulse_ai",
+                user_id=user_id,
+                session_id=session_id
+            )
+        except Exception as e:
+            # Session might already exist, that's okay
+            pass
     
     return st.session_state.agent_runner
 
@@ -218,23 +232,11 @@ def get_agent_runner():
 async def get_agent_response(user_message: str, retry_count: int = 0) -> str:
     """Get response from agent"""
     try:
-        runner = get_agent_runner()
+        runner = await get_agent_runner()
         response_text = ""
         
         user_id = st.session_state.user_id
         session_id = st.session_state.session_id
-        
-        # First, ensure the session exists by creating it if needed
-        try:
-            # Try to create/get the session
-            session = runner.session_service.create_session(
-                app_name="agripulse_ai",
-                user_id=user_id,
-                session_id=session_id
-            )
-        except Exception as session_error:
-            # Session might already exist, that's okay
-            pass
         
         # Create content object for the message
         new_message = types.Content(
@@ -242,39 +244,31 @@ async def get_agent_response(user_message: str, retry_count: int = 0) -> str:
             parts=[types.Part(text=user_message)]
         )
         
-        # Run agent with proper parameters
+        # Run agent - the session should already exist from get_agent_runner()
         async for event in runner.run_async(
             user_id=user_id,
             session_id=session_id,
             new_message=new_message
         ):
-            # Extract content from event
-            if hasattr(event, 'content') and event.content:
-                content = event.content
-                # Handle different content types
-                if isinstance(content, str):
-                    response_text += content
-                elif hasattr(content, 'parts'):
-                    for part in content.parts:
-                        if hasattr(part, 'text'):
-                            response_text += part.text
-                elif hasattr(content, 'text'):
-                    response_text += str(content.text)
-                else:
-                    response_text += str(content)
-            elif hasattr(event, 'text') and event.text:
-                response_text += str(event.text)
-            elif hasattr(event, 'message') and event.message:
-                response_text += str(event.message)
+            # Extract content from event - check for final response
+            if hasattr(event, 'is_final_response') and event.is_final_response():
+                if hasattr(event, 'content') and event.content:
+                    content = event.content
+                    if hasattr(content, 'parts'):
+                        for part in content.parts:
+                            if hasattr(part, 'text'):
+                                response_text += part.text
         
         return response_text if response_text else "I apologize, but I couldn't generate a response. Please try again."
     
     except ValueError as e:
         if "Session not found" in str(e) and retry_count == 0:
-            # Session expired, create new one and retry
+            # Session not found, reset everything and retry
             import uuid
             st.session_state.session_id = str(uuid.uuid4())
-            # Don't reset the runner, just use new session ID
+            st.session_state.agent_runner = None  # Force new runner creation
+            
+            # Retry with new session
             return await get_agent_response(user_message, retry_count=1)
         else:
             return f"❌ **Session Error:** {str(e)}\n\nPlease refresh the page to start a new session."
@@ -310,7 +304,6 @@ def display_sidebar():
             st.session_state.conversation_count = 0
             # Reset agent runner and create new session
             st.session_state.agent_runner = None
-            st.session_state.session_created = False
             import uuid
             st.session_state.session_id = str(uuid.uuid4())
             st.rerun()
