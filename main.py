@@ -262,7 +262,32 @@ async def get_agent_response(user_message: str, retry_count: int = 0) -> str:
         return response_text if response_text else "I apologize, but I couldn't generate a response. Please try again."
     
     except ValueError as e:
-        if "Session not found" in str(e) and retry_count == 0:
+        error_str = str(e)
+        
+        # Handle quota/rate limit errors
+        if "RESOURCE_EXHAUSTED" in error_str or "429" in error_str or "quota" in error_str.lower():
+            return """❌ **API Quota Exceeded**
+
+The Gemini API free tier quota has been exceeded. 
+
+**What happened:**
+- Free tier limit: 50 requests/day for experimental models
+- Your quota will reset in approximately 24 hours
+
+**Solutions:**
+1. **Wait and retry** - Your quota resets daily
+2. **Switch to stable model** - `gemini-1.5-flash` has 1,500 requests/day (already configured)
+3. **Upgrade to paid tier** - Get higher limits at [Google AI Studio](https://aistudio.google.com/)
+
+**Note:** The app has been configured to use `gemini-1.5-flash` which has much higher limits. Please restart the Streamlit app for the changes to take effect.
+
+```bash
+# Stop the app (Ctrl+C) and restart:
+streamlit run main.py
+```"""
+        
+        # Handle session errors
+        if "Session not found" in error_str and retry_count == 0:
             # Session not found, reset everything and retry
             import uuid
             st.session_state.session_id = str(uuid.uuid4())
@@ -271,13 +296,32 @@ async def get_agent_response(user_message: str, retry_count: int = 0) -> str:
             # Retry with new session
             return await get_agent_response(user_message, retry_count=1)
         else:
-            return f"❌ **Session Error:** {str(e)}\n\nPlease refresh the page to start a new session."
+            return f"❌ **Session Error:** {error_str}\n\nPlease refresh the page to start a new session."
+    
     except Exception as e:
         import traceback
         error_details = traceback.format_exc()
+        error_str = str(e)
+        
+        # Check if it's a quota error in the exception
+        if "RESOURCE_EXHAUSTED" in error_str or "429" in error_str or "quota" in error_str.lower():
+            return """❌ **API Quota Exceeded**
+
+The Gemini API free tier quota has been exceeded.
+
+**Solutions:**
+1. **Restart the app** - The configuration has been updated to use `gemini-1.5-flash` (1,500 requests/day)
+2. **Wait for quota reset** - Quotas reset daily
+3. **Upgrade to paid tier** - Visit [Google AI Studio](https://aistudio.google.com/)
+
+```bash
+# Stop the app (Ctrl+C) and restart:
+streamlit run main.py
+```"""
+        
         # Only show first 500 chars of traceback to avoid overwhelming the UI
         short_trace = error_details[:500] + "..." if len(error_details) > 500 else error_details
-        return f"❌ **Error:** {str(e)}\n\n```\n{short_trace}\n```"
+        return f"❌ **Error:** {error_str}\n\n```\n{short_trace}\n```"
 
 
 def display_header():

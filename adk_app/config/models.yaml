@@ -4,7 +4,7 @@
 models:
   # Default model for all agents
   default:
-    model_id: "gemini-2.0-flash-exp"
+    model_id: "gemini-1.5-flash"  # Stable model with higher free tier limits
     auth_mode: "gemini"  # Options: gemini, vertex
     
   # Model-specific configurations

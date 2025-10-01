@@ -10,6 +10,11 @@ from ..snowflake_yield_tools import (
     get_available_districts,
     get_available_forecast_years
 )
+from ..crop_practice_tools import (
+    get_crop_best_practices,
+    get_available_crop_practice_types,
+    get_crop_practice_summary
+)
 
 
 class YieldToolset:
@@ -29,5 +34,9 @@ class YieldToolset:
             # Database metadata/discovery tools
             FunctionTool(func=get_available_crop_types),
             FunctionTool(func=get_available_districts),
-            FunctionTool(func=get_available_forecast_years)
+            FunctionTool(func=get_available_forecast_years),
+            # Crop best practices tools
+            FunctionTool(func=get_crop_best_practices),
+            FunctionTool(func=get_available_crop_practice_types),
+            FunctionTool(func=get_crop_practice_summary)
         ]
