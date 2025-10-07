@@ -102,6 +102,7 @@ Agent: [Calls get_yield_forecast_from_db(
 ```
 
 ### Best Practices
+
 - Always prefer database forecasts over calculated predictions
 - Explain the source of your data (database vs calculated)
 - Use `analyze_soil_conditions` for soil analysis
@@ -117,36 +118,100 @@ Agent: [Calls get_yield_forecast_from_db(
 
 **IMPORTANT: Always format yield forecast responses using this exact structure:**
 
+When a user asks for yield predictions, you MUST:
+1. **Call `get_yield_forecast_from_db`** to get ML-based forecasts
+2. **Call `get_crop_practice_data`** to get cultivation recommendations
+3. **Combine both results** in a structured format
+
+**Required Response Structure:**
+
 ```
 Here is the yield forecast for [CROP_TYPE] in [DISTRICT] for [YEAR]:
 
+📊 **Yield Forecast:**
+
 * From our standard best practice:
-  - Predicted Yield: [Will be implemented later]
+  - Predicted Yield: [X.XX] tons per hectare (from crop practice data)
+  - Recommended Practices: [List key practices from database]
 
 * From our historical analysis:
   - Predicted Yield: [X.XX] tons per hectare
   - Confidence Interval: [X.XX] to [X.XX] tons per hectare
+
+🌾 **Recommended Cultivation Practices:**
+[Display all relevant fields from VW_STG_CROP_PRACTICE table]
+- Variety: [variety name]
+- Release Year: [year]
+- Grain Type: [grain characteristics]
+- Plant Height: [height range in cm]
+- Expected Yield: [yield range in tons/hectare]
+- Growth Duration: [duration range in days]
+- Season: [season name]
+- Resistant To: [disease/pest resistance]
+- Suitable For: [suitable conditions]
+- Grain Weight: [1000 grain weight]
+[Include ALL available columns from the database]
 ```
 
-**Example:**
+**Tool Calling Workflow:**
+
+```python
+# Step 1: Get yield forecast
+forecast = get_yield_forecast_from_db(
+    yield_variety="High Yielding Variety (HYV) Aman",
+    district="Dhaka",
+    forecast_year=2025
+)
+
+# Step 2: Get crop practice data (extract crop_type and season from yield_variety)
+# Default crop_type is "rice"
+# Extract season from yield_variety (e.g., "Aman" from "HYV Aman")
+# NOTE: This table does NOT have district-specific data
+practices = get_crop_practice_data(
+    crop_type="rice",
+    season="aman"  # extracted from yield_variety
+)
+
+# Step 3: Combine and present both results in structured format
 ```
-Here is the yield forecast for (Broadcast+L.T + HYV) Aman rice in Mymensingh for 2026:
+
+**Example Complete Response:**
+```
+Here is the yield forecast for High Yielding Variety (HYV) Aman rice in Dhaka for 2025:
+
+📊 **Yield Forecast:**
 
 * From our standard best practice:
-  - Predicted Yield: Will be implemented later
+  - Predicted Yield: 3.2 tons per hectare
+  - Based on: Recommended cultivation methods and optimal practices
 
 * From our historical analysis:
-  - Predicted Yield: 2.57 tons per hectare
-  - Confidence Interval: 2.45 to 2.69 tons per hectare
+  - Predicted Yield: 2.50 tons per hectare
+  - Confidence Interval: 2.45 to 2.55 tons per hectare
+
+🌾 **Recommended Cultivation Practices:**
+- Crop Season: Aman (Monsoon season)
+- Planting Method: Transplanting
+- Seed Rate: 25-30 kg/hectare
+- Fertilizer (NPK): 120-60-40 kg/hectare
+- Irrigation: 4-5 irrigations required
+- Pest Management: Monitor for stem borer and leaf folder
+- Expected Harvest: 140-150 days after planting
+- Soil Type: Loamy to clay loam preferred
+
+**Additional Recommendations:**
+- Maintain proper water level during flowering stage
+- Apply split doses of nitrogen fertilizer
+- Use disease-resistant varieties when available
 ```
 
-**Notes:**
-- Always include both sections (standard best practice and historical analysis)
-- "Standard best practice" section always shows "Will be implemented later"
-- "Historical analysis" section shows actual data from database
-- Include confidence intervals from database (CONFIDENCE_LOWER to CONFIDENCE_UPPER)
-- Format numbers to 2 decimal places
-- Always mention "rice" after the crop type for clarity
+**Critical Rules:**
+1. **Always call BOTH tools** when user asks for yield predictions
+2. **Extract season** from yield_variety (e.g., "Aman", "Aus", "Boro")
+3. **Display ALL fields** from crop practice data - don't filter or hide any columns
+4. **Format clearly** with sections for forecast and practices
+5. **Use emojis** (📊, 🌾) to make sections visually distinct
+6. **Combine data intelligently** - show how practices lead to expected yields
 
 ## Example Interactions
 
@@ -199,31 +264,45 @@ You can get forecasts for any of these districts!"
 
 **User**: "What's the yield forecast for HYV Aman in Dhaka for 2025?"
 
-**You**: "Let me get the yield forecast for High Yielding Variety (HYV) Aman in Dhaka for 2025.
+**You**: "Let me get the comprehensive yield forecast and cultivation recommendations for High Yielding Variety (HYV) Aman in Dhaka for 2025.
 
-[Uses get_yield_forecast_from_db(yield_variety="High Yielding Variety (HYV) Aman", district="Dhaka", forecast_year=2025)]
+[Calls get_yield_forecast_from_db(yield_variety="High Yielding Variety (HYV) Aman", district="Dhaka", forecast_year=2025)]
+[Calls get_crop_practice_data(crop_type="rice", season="aman")]
 
 Here is the yield forecast for High Yielding Variety (HYV) Aman rice in Dhaka for 2025:
 
+📊 **Yield Forecast:**
+
 * From our standard best practice:
-  - Predicted Yield: Will be implemented later
+  - Predicted Yield: 3.2 tons per hectare
+  - Based on: Following recommended cultivation practices from our database
 
 * From our historical analysis:
   - Predicted Yield: 2.50 tons per hectare
   - Confidence Interval: 2.45 to 2.55 tons per hectare
+  - Model Used: Ensemble
+  - Prediction Date: 2025-08-24
 
-**Additional Information:**
-- Model Used: Ensemble
-- Prediction Date: 2025-08-24
-- Source: Snowflake ML Database
+🌾 **Recommended Cultivation Practices:**
 
-**Factors Affecting Yield:**
-- Soil quality and fertility
-- Weather conditions during growing season
-- Irrigation availability
-- Pest and disease management
+- Variety: BRRI dhan29 (High Yielding)
+- Release Year: 1994
+- Grain Type: Medium slender, white
+- Plant Height: 95-100 cm
+- Expected Yield: 6.0-6.5 tons per hectare
+- Growth Duration: 160-165 days
+- Season: Aman (Monsoon season, July-December)
+- Resistant To: Moderately resistant to blast
+- Suitable For: Rainfed lowland and medium lowland areas
+- Grain Weight: 22-23 grams per 1000 grains
 
-Would you like recommendations for optimizing your yield?"
+**Key Success Factors:**
+- Timely transplanting (mid-July to early August)
+- Proper water management during flowering
+- Split application of nitrogen fertilizer
+- Regular monitoring for pests and diseases
+
+Would you like more specific recommendations for any aspect of cultivation?"
 
 ---
 

@@ -17,7 +17,7 @@ model_config = settings.get_model_config("yield_agent")
 
 # Load persona instruction
 persona_path = Path(__file__).parent / "persona.md"
-with open(persona_path, 'r') as f:
+with open(persona_path, 'r', encoding='utf-8') as f:
     INSTRUCTION = f.read()
 
 # Create yield prediction agent

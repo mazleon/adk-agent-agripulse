@@ -510,6 +510,156 @@ def get_available_forecast_years() -> Dict[str, Any]:
         }
 
 
+def get_crop_practice_data(
+    crop_type: Optional[str] = "rice",
+    season: Optional[str] = None,
+    variety: Optional[str] = None,
+    limit: int = 10
+) -> Dict[str, Any]:
+    """
+    Fetch crop practice recommendations from Snowflake database.
+    
+    This function retrieves agricultural best practices, cultivation methods,
+    variety information, and recommendations for specific crops.
+    
+    Table Structure (VW_STG_CROP_PRACTICE):
+    - CROP_PRACTICE_ID, CROP_TYPE, VARIETY, RELEASE_YEAR, GRAIN_TYPE
+    - PLANT_HEIGHT_FROM_CM, PLANT_HEIGHT_TO_CM
+    - GRAIN_YIELD_FROM_T_HA, GRAIN_YIELD_TO_T_HA
+    - DURATION_FROM_DAYS, DURATION_TO_DAYS
+    - GRAINS_PER_SPIKE, GRAIN_WEIGHT_1000_G
+    - SEASON, RESISTANT_TO, SUITABLE_FOR, NOTE
+    
+    Args:
+        crop_type: Crop type (default: "rice"). Examples: "rice", "wheat", "maize"
+        season: Crop season. Examples: "aman", "boro", "aus", "rabi", "kharif"
+        variety: Specific variety name. Examples: "BR3", "BRRI dhan28", "BRRI dhan29"
+        limit: Maximum number of records to return (default: 10)
+    
+    Returns:
+        Dictionary containing crop practice data and recommendations
+        
+    Example:
+        # User asks: "What are the best practices for rice cultivation?"
+        get_crop_practice_data(
+            crop_type="rice",
+            season="aman"
+        )
+    
+    Note:
+        - This data complements yield forecasts with actionable cultivation advice
+        - Combines with get_yield_forecast_from_db for comprehensive recommendations
+        - Table does NOT contain district-specific data (practices are general)
+    """
+    try:
+        manager = get_snowflake_manager()
+        
+        # Build dynamic query based on provided parameters
+        query = """
+        SELECT 
+            CROP_PRACTICE_ID,
+            CROP_TYPE,
+            VARIETY,
+            RELEASE_YEAR,
+            GRAIN_TYPE,
+            PLANT_HEIGHT_FROM_CM,
+            PLANT_HEIGHT_TO_CM,
+            GRAIN_YIELD_FROM_T_HA,
+            GRAIN_YIELD_TO_T_HA,
+            DURATION_FROM_DAYS,
+            DURATION_TO_DAYS,
+            GRAINS_PER_SPIKE,
+            GRAIN_WEIGHT_1000_G,
+            SEASON,
+            RESISTANT_TO,
+            SUITABLE_FOR,
+            NOTE
+        FROM DEV_DATA_ML_DB.DATA_ML_SCHEMA.VW_STG_CROP_PRACTICE
+        WHERE 1=1
+        """
+        
+        params = {}
+        
+        # Add filters based on provided parameters
+        if crop_type:
+            query += " AND LOWER(CROP_TYPE) LIKE LOWER(%(crop_type)s)"
+            params["crop_type"] = f"%{crop_type}%"
+        
+        if season:
+            query += " AND LOWER(SEASON) LIKE LOWER(%(season)s)"
+            params["season"] = f"%{season}%"
+        
+        if variety:
+            query += " AND LOWER(VARIETY) LIKE LOWER(%(variety)s)"
+            params["variety"] = f"%{variety}%"
+        
+        query += " ORDER BY GRAIN_YIELD_FROM_T_HA DESC LIMIT %(limit)s"
+        params["limit"] = limit
+        
+        logger.info(f"Executing crop practice query: crop_type={crop_type}, season={season}, variety={variety}")
+        
+        results = manager.execute_query(query, params if params else None)
+        
+        if not results:
+            return {
+                "status": "success",
+                "message": f"No crop practice data found for the specified criteria.",
+                "filters_used": {
+                    "crop_type": crop_type,
+                    "season": season,
+                    "variety": variety
+                },
+                "count": 0,
+                "practices": [],
+                "suggestion": "Try broader search terms. Available seasons: Aman, Aus, Boro. Crop types: rice, wheat, etc."
+            }
+        
+        # Format results - convert all special types for JSON serialization
+        formatted_practices = []
+        for row in results:
+            formatted_row = {}
+            for key, value in row.items():
+                if isinstance(value, (datetime, date)):
+                    formatted_row[key.lower()] = value.isoformat()
+                elif isinstance(value, Decimal):
+                    formatted_row[key.lower()] = float(value)
+                else:
+                    formatted_row[key.lower()] = value
+            formatted_practices.append(formatted_row)
+        
+        return {
+            "status": "success",
+            "count": len(formatted_practices),
+            "query_parameters": {
+                "crop_type": crop_type,
+                "season": season,
+                "variety": variety
+            },
+            "practices": formatted_practices,
+            "source": "Snowflake ML Database",
+            "table": "DEV_DATA_ML_DB.DATA_ML_SCHEMA.VW_STG_CROP_PRACTICE",
+            "note": "Crop practice data includes variety characteristics, yield potential, duration, and cultivation recommendations. Sorted by yield potential (highest first)."
+        }
+        
+    except FileNotFoundError as e:
+        logger.error(f"Database configuration error: {str(e)}")
+        return {
+            "status": "error",
+            "error_type": "configuration_error",
+            "error_message": str(e),
+            "suggestion": "Ensure database_connection_config.pem file exists in the project root"
+        }
+    
+    except Exception as e:
+        logger.error(f"Error fetching crop practice data from database: {str(e)}")
+        return {
+            "status": "error",
+            "error_type": "database_error",
+            "error_message": f"Failed to fetch crop practice data: {str(e)}",
+            "suggestion": "Check database connection and verify table VW_STG_CROP_PRACTICE exists"
+        }
+
+
 def test_database_connection() -> Dict[str, Any]:
     """
     Test the Snowflake database connection.
