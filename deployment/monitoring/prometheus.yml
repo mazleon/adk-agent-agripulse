@@ -1,0 +1,76 @@
+# ============================================================================
+# Prometheus Configuration for AgriPulse AI
+# ============================================================================
+
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+  external_labels:
+    cluster: 'agripulse-production'
+    environment: 'docker'
+
+# Alertmanager configuration (optional)
+# alerting:
+#   alertmanagers:
+#     - static_configs:
+#         - targets:
+#           - alertmanager:9093
+
+# Load rules once and periodically evaluate them
+# rule_files:
+#   - "alerts/*.yml"
+
+# Scrape configurations
+scrape_configs:
+  # ============================================================================
+  # Prometheus self-monitoring
+  # ============================================================================
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+        labels:
+          service: 'prometheus'
+
+  # ============================================================================
+  # AgriPulse Application
+  # ============================================================================
+  - job_name: 'agripulse-app'
+    scrape_interval: 30s
+    scrape_timeout: 10s
+    metrics_path: '/_stcore/health'
+    static_configs:
+      - targets: ['agripulse-app:8501']
+        labels:
+          service: 'agripulse-ai'
+          component: 'streamlit-app'
+
+  # ============================================================================
+  # cAdvisor - Container metrics
+  # ============================================================================
+  - job_name: 'cadvisor'
+    scrape_interval: 15s
+    static_configs:
+      - targets: ['cadvisor:8080']
+        labels:
+          service: 'cadvisor'
+          component: 'container-metrics'
+
+  # ============================================================================
+  # Node Exporter - System metrics
+  # ============================================================================
+  - job_name: 'node-exporter'
+    scrape_interval: 15s
+    static_configs:
+      - targets: ['node-exporter:9100']
+        labels:
+          service: 'node-exporter'
+          component: 'system-metrics'
+
+  # ============================================================================
+  # Docker daemon metrics (if exposed)
+  # ============================================================================
+  # - job_name: 'docker'
+  #   static_configs:
+  #     - targets: ['host.docker.internal:9323']
+  #       labels:
+  #         service: 'docker'

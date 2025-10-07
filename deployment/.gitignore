@@ -1,0 +1,30 @@
+# ============================================================================
+# Deployment Directory - Git Ignore
+# ============================================================================
+
+# Environment files with sensitive data
+.env
+.env.local
+.env.production
+
+# Secrets directory
+secrets/
+*.pem
+*.key
+*.crt
+
+# Logs
+logs/
+*.log
+
+# Docker volumes
+volumes/
+
+# Temporary files
+*.tmp
+*.bak
+~*
+
+# OS files
+.DS_Store
+Thumbs.db

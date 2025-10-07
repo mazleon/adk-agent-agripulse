@@ -1,0 +1,112 @@
+# ============================================================================
+# Docker Ignore File - Optimize Docker Build Context
+# ============================================================================
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+dist/
+build/
+*.egg
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# Virtual Environments
+.venv/
+venv/
+ENV/
+env/
+.env.local
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Git
+.git/
+.gitignore
+.gitattributes
+
+# Documentation
+*.md
+!README.md
+docs/
+QUICKSTART.md
+SUCCESS.md
+STREAMLIT_COMPLETE.md
+CROP_PRACTICE_INTEGRATION.md
+
+# Tests
+tests/
+test_*.py
+*_test.py
+check_table_structure.py
+test_crop_practice_integration.py
+test_streamlit_session.py
+
+# Deployment files (don't copy deployment folder into itself)
+deployment/
+docker-compose*.yml
+Dockerfile
+.dockerignore
+
+# Logs
+*.log
+logs/
+*.out
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+*.bak
+
+# OS files
+Thumbs.db
+.DS_Store
+
+# Lock files (we copy them explicitly when needed)
+# uv.lock is needed, so don't ignore it
+
+# Scripts (if not needed in container)
+scripts/
+
+# Source code that's not part of the app
+src/
+
+# Environment files (will be provided at runtime)
+.env
+.env.example
+
+# Large files
+*.zip
+*.tar.gz
+*.rar
+
+# Jupyter notebooks
+*.ipynb
+.ipynb_checkpoints/
+
+# Database files (if any)
+*.db
+*.sqlite
+*.sqlite3
+
+# Cache directories
+.cache/
+.npm/
+.yarn/
+node_modules/

@@ -1,0 +1,101 @@
+# ============================================================================
+# AgriPulse AI - Docker Compose Configuration
+# ============================================================================
+# Production-ready orchestration with health checks and monitoring
+# ============================================================================
+
+version: '3.8'
+
+services:
+  # ============================================================================
+  # AgriPulse AI Application
+  # ============================================================================
+  agripulse-app:
+    build:
+      context: ..
+      dockerfile: deployment/Dockerfile
+      args:
+        - DEBIAN_FRONTEND=noninteractive
+    
+    image: agripulse-ai:latest
+    
+    container_name: agripulse-app
+    
+    restart: unless-stopped
+    
+    ports:
+      - "${APP_PORT:-8501}:8501"
+    
+    environment:
+      # Google API Configuration
+      - GOOGLE_API_KEY=${GOOGLE_API_KEY}
+      - GOOGLE_CLOUD_PROJECT=${GOOGLE_CLOUD_PROJECT:-}
+      
+      # Snowflake Configuration
+      - SNOWFLAKE_USER=${SNOWFLAKE_USER}
+      - SNOWFLAKE_ACCOUNT=${SNOWFLAKE_ACCOUNT}
+      - SNOWFLAKE_ROLE=${SNOWFLAKE_ROLE}
+      - SNOWFLAKE_WAREHOUSE=${SNOWFLAKE_WAREHOUSE}
+      - SNOWFLAKE_DATABASE=${SNOWFLAKE_DATABASE}
+      - SNOWFLAKE_SCHEMA=${SNOWFLAKE_SCHEMA}
+      - SNOWFLAKE_PRIVATE_KEY_FILE=/app/secrets/snowflake_key.pem
+      
+      # Application Configuration
+      - ENVIRONMENT=${ENVIRONMENT:-production}
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+      
+      # Streamlit Configuration
+      - STREAMLIT_SERVER_PORT=8501
+      - STREAMLIT_SERVER_ADDRESS=0.0.0.0
+      - STREAMLIT_SERVER_HEADLESS=true
+      - STREAMLIT_BROWSER_GATHER_USAGE_STATS=false
+    
+    volumes:
+      # Mount secrets directory for Snowflake private key
+      - ./secrets:/app/secrets:ro
+      
+      # Mount logs directory for persistent logging
+      - ./logs:/app/logs
+      
+      # Optional: Mount custom configuration
+      - ./config:/app/config:ro
+    
+    networks:
+      - agripulse-network
+    
+    healthcheck:
+      test: ["CMD", "python", "-c", "import requests; requests.get('http://localhost:8501/_stcore/health')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    
+    labels:
+      - "com.agripulse.app=main"
+      - "com.agripulse.version=1.0.0"
+      - "com.agripulse.description=AgriPulse AI Agricultural Assistant"
+    
+    # Resource limits (adjust based on your needs)
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 2G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+
+# ============================================================================
+# Networks
+# ============================================================================
+networks:
+  agripulse-network:
+    driver: bridge
+    name: agripulse-network
+
+# ============================================================================
+# Volumes (optional - for data persistence)
+# ============================================================================
+volumes:
+  agripulse-logs:
+    driver: local

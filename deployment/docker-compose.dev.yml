@@ -1,0 +1,83 @@
+# ============================================================================
+# AgriPulse AI - Development Docker Compose Configuration
+# ============================================================================
+# Development setup with hot-reload and debugging capabilities
+# ============================================================================
+
+version: '3.8'
+
+services:
+  # ============================================================================
+  # AgriPulse AI Application (Development Mode)
+  # ============================================================================
+  agripulse-app-dev:
+    build:
+      context: ..
+      dockerfile: deployment/Dockerfile
+      target: runtime
+    
+    image: agripulse-ai:dev
+    
+    container_name: agripulse-app-dev
+    
+    restart: unless-stopped
+    
+    ports:
+      - "8501:8501"
+    
+    environment:
+      # Google API Configuration
+      - GOOGLE_API_KEY=${GOOGLE_API_KEY}
+      - GOOGLE_CLOUD_PROJECT=${GOOGLE_CLOUD_PROJECT:-}
+      
+      # Snowflake Configuration
+      - SNOWFLAKE_USER=${SNOWFLAKE_USER}
+      - SNOWFLAKE_ACCOUNT=${SNOWFLAKE_ACCOUNT}
+      - SNOWFLAKE_ROLE=${SNOWFLAKE_ROLE}
+      - SNOWFLAKE_WAREHOUSE=${SNOWFLAKE_WAREHOUSE}
+      - SNOWFLAKE_DATABASE=${SNOWFLAKE_DATABASE}
+      - SNOWFLAKE_SCHEMA=${SNOWFLAKE_SCHEMA}
+      - SNOWFLAKE_PRIVATE_KEY_FILE=/app/secrets/snowflake_key.pem
+      
+      # Development Configuration
+      - ENVIRONMENT=development
+      - LOG_LEVEL=DEBUG
+      - PYTHONUNBUFFERED=1
+      
+      # Streamlit Development Settings
+      - STREAMLIT_SERVER_PORT=8501
+      - STREAMLIT_SERVER_ADDRESS=0.0.0.0
+      - STREAMLIT_SERVER_HEADLESS=true
+      - STREAMLIT_SERVER_RUN_ON_SAVE=true
+      - STREAMLIT_SERVER_FILE_WATCHER_TYPE=auto
+      - STREAMLIT_BROWSER_GATHER_USAGE_STATS=false
+    
+    volumes:
+      # Mount entire application for hot-reload
+      - ..:/app
+      
+      # Mount secrets
+      - ./secrets:/app/secrets:ro
+      
+      # Mount logs
+      - ./logs:/app/logs
+      
+      # Exclude virtual environment from mount
+      - /app/.venv
+    
+    networks:
+      - agripulse-dev-network
+    
+    command: ["main.py", "--server.port=8501", "--server.address=0.0.0.0", "--server.runOnSave=true"]
+    
+    labels:
+      - "com.agripulse.app=dev"
+      - "com.agripulse.environment=development"
+
+# ============================================================================
+# Networks
+# ============================================================================
+networks:
+  agripulse-dev-network:
+    driver: bridge
+    name: agripulse-dev-network
