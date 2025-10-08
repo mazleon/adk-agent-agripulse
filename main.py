@@ -445,37 +445,6 @@ def display_sidebar():
         """)
 
 
-def display_example_queries():
-    """Display example queries"""
-    st.markdown("### 💡 Example Queries")
-    
-    examples = {
-        "Weather": [
-            "What's the weather in Dhaka?",
-            "Will it rain in London tomorrow?",
-            "Weather forecast for New York"
-        ],
-        "Yield Predictions": [
-            "What crop types are available?",
-            "Show me the latest yield forecasts",
-            "What's the yield forecast for HYV Aman in Dhaka for 2025?",
-            "What districts are covered?"
-        ],
-        "General": [
-            "What can you help me with?",
-            "Show me weather and yield forecasts for Dhaka"
-        ]
-    }
-    
-    for category, queries in examples.items():
-        with st.expander(f"📌 {category}", expanded=False):
-            for query in queries:
-                if st.button(query, key=f"example_{query}", use_container_width=True):
-                    # Set a flag to process this query
-                    st.session_state.pending_query = query
-                    st.rerun()
-
-
 def display_chat_interface():
     """Display main chat interface"""
     # Check if there's a pending query from example buttons
@@ -555,22 +524,14 @@ def main():
     # Display header
     display_header()
     
-    # Create layout
-    col1, col2 = st.columns([3, 1])
+    # Display welcome message or chat (full width now)
+    if len(st.session_state.messages) == 0:
+        display_welcome_message()
     
-    with col1:
-        # Display welcome message or chat
-        if len(st.session_state.messages) == 0:
-            display_welcome_message()
-        
-        # Chat interface
-        display_chat_interface()
+    # Chat interface (full width)
+    display_chat_interface()
     
-    with col2:
-        # Example queries
-        display_example_queries()
-    
-    # Sidebar
+    # Sidebar (contains example queries)
     display_sidebar()
     
     # Footer
