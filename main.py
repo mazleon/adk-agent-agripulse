@@ -74,6 +74,23 @@ st.markdown("""
         padding: 1rem;
     }
     
+    /* Sidebar expander styling */
+    .streamlit-expanderHeader {
+        font-weight: 500;
+        font-size: 0.95rem;
+    }
+    
+    /* Sidebar buttons */
+    [data-testid="stSidebar"] .stButton > button {
+        font-size: 0.85rem;
+        padding: 0.4rem 0.8rem;
+    }
+    
+    /* Sidebar info boxes */
+    [data-testid="stSidebar"] .stMarkdown {
+        font-size: 0.9rem;
+    }
+    
     /* Button styling */
     .stButton > button {
         width: 100%;
@@ -310,22 +327,101 @@ def display_sidebar():
         
         st.markdown("---")
         
-        # Agent information
-        st.markdown("### 🤖 Available Agents")
-        st.markdown("""
-        <div class="info-box">
-            <strong>🌤️ Weather Agent</strong><br>
-            Real-time weather data and forecasts
-        </div>
-        <div class="info-box">
-            <strong>🌾 Yield Agent</strong><br>
-            ML-powered crop yield predictions
-        </div>
-        <div class="info-box">
-            <strong>🔍 Discovery Tools</strong><br>
-            Explore available data
-        </div>
-        """, unsafe_allow_html=True)
+        # Available Crop Types from Database
+        st.markdown("### 🌾 Available Crop Types")
+        with st.expander("📊 Forecast Data", expanded=False):
+            st.markdown("""
+            **Rice Varieties:**
+            - High Yielding Variety (HYV) Aman
+            - (Broadcast+L.T + HYV) Aman
+            - Local Transplanted (L.T) Aman
+            - HYV Aus
+            - HYV Boro
+            - Local Aus
+            - Local Boro
+            
+            **Seasons:**
+            - Aman (Monsoon)
+            - Aus (Pre-monsoon)
+            - Boro (Winter)
+            """)
+        
+        with st.expander("🌱 Cultivation Practices", expanded=False):
+            st.markdown("""
+            **Crop Types:**
+            - Rice (Aman, Aus, Boro)
+            - Wheat
+            - Maize
+            
+            **Seasons:**
+            - Kharif (Monsoon)
+            - Rabi (Winter)
+            - Summer
+            """)
+        
+        st.markdown("---")
+        
+        # Available Districts
+        st.markdown("### 📍 Available Districts")
+        with st.expander("View All Districts", expanded=False):
+            st.markdown("""
+            **Major Districts:**
+            - Dhaka
+            - Bagerhat
+            - Bandarban
+            - Barguna
+            - Barisal
+            - Bhola
+            - Bogra
+            - Chittagong
+            - Comilla
+            - Cox's Bazar
+            - Dinajpur
+            - Faridpur
+            - Jessore
+            - Khulna
+            - Mymensingh
+            - Rajshahi
+            - Rangpur
+            - Sylhet
+            
+            *...and 55 more districts*
+            """)
+        
+        st.markdown("---")
+        
+        # Quick Example Queries
+        st.markdown("### 💡 Quick Examples")
+        
+        example_queries = {
+            "🌤️ Weather": [
+                "What's the weather in Dhaka?",
+                "Will it rain tomorrow in Chittagong?"
+            ],
+            "🌾 Yield Forecast": [
+                "Get yield forecast for High Yielding Variety (HYV) Aman in Dhaka district for year 2025",
+                "Show me the latest yield forecasts",
+                "What's the yield forecast for HYV Boro in Mymensingh for 2026?",
+                "Yield prediction for Aman rice in Bagerhat district for 2025"
+            ],
+            "🌱 Best Practices": [
+                "What are the best practices for rice cultivation?",
+                "Show cultivation guidelines for Aman rice in Kharif season",
+                "Tell me about rice varieties suitable for Kharif season"
+            ],
+            "🔍 Discovery": [
+                "What crop types are available for forecasting?",
+                "Show me all available districts",
+                "What years have forecast data available?"
+            ]
+        }
+        
+        for category, queries in example_queries.items():
+            with st.expander(category, expanded=False):
+                for query in queries:
+                    if st.button(query, key=f"sidebar_{query}", use_container_width=True):
+                        st.session_state.pending_query = query
+                        st.rerun()
         
         st.markdown("---")
         
@@ -339,31 +435,13 @@ def display_sidebar():
         
         st.markdown("---")
         
-        # Database info
-        st.markdown("### 📈 Database Coverage")
-        st.markdown("""
-        <div class="stat-card">
-            <h3>645</h3>
-            <p>Yield Forecasts</p>
-        </div>
-        <div class="stat-card">
-            <h3>73</h3>
-            <p>Districts</p>
-        </div>
-        <div class="stat-card">
-            <h3>5</h3>
-            <p>Years (2024-2028)</p>
-        </div>
-        """, unsafe_allow_html=True)
-        
-        st.markdown("---")
-        
-        # Quick links
-        st.markdown("### 🔗 Quick Links")
-        st.markdown("""
-        - [📚 Documentation](docs/README.md)
-        - [🔧 Setup Guide](docs/SNOWFLAKE_INTEGRATION.md)
-        - [🔍 Discovery Tools](docs/DISCOVERY_TOOLS.md)
+        # Database Coverage Summary
+        st.markdown("### 📈 Data Coverage")
+        st.info("""
+        **Yield Forecasts:** 645 records  
+        **Districts:** 73 locations  
+        **Years:** 2024-2028  
+        **Crop Varieties:** 15+ types
         """)
 
 
