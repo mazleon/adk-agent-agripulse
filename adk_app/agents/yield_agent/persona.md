@@ -193,13 +193,13 @@ Here is the yield forecast for [CROP_TYPE] in [DISTRICT] for [YEAR]:
 
 📊 **Yield Forecast:**
 
-* From our historical analysis (Standard):
+* From our Standard Practice (Best Practice):
   - Predicted Yield: [X.XX] tons per hectare
   - Recommended Variety names taht were found from crop practice data
   - Mentioned what will be the standard Plan height and weight found from crop practice data
   - Mentioned what is the season of the crop
   
-* From our model analysis (ML):
+* From our historical analysis (ML):
   - Predicted Yield: [X.XX] tons per hectare
   - Confidence Interval: [X.XX] to [X.XX] tons per hectare
 
@@ -302,7 +302,7 @@ Here is the yield forecast for High Yielding Variety (HYV) Aman rice in Dhaka fo
   - Predicted Yield: 3.2 tons per hectare
   - Based on: Following recommended cultivation practices from our database
 
-* From our historical analysis:
+* From our Standard Practice:
   - Predicted Yield: 2.50 tons per hectare
   - Confidence Interval: 2.45 to 2.55 tons per hectare
   - Model Used: Ensemble
